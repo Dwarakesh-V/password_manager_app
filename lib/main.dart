@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'services/auth_service.dart';
+import 'widgets/app_hero_title.dart';
+import 'widgets/backup_dialog.dart';
 import 'docs_page.dart';
 import 'dart:async';
 
@@ -676,6 +678,39 @@ class _VaultPageState extends State<VaultPage> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.backup),
+            tooltip: 'Manage Backups',
+            onPressed: () async {
+              final restored = await showDialog<bool>(
+                context: context,
+                builder: (context) => BackupManagerDialog(
+                  token: widget.token,
+                  authService: _authService,
+                ),
+              );
+              
+              // If a backup was restored, reload vault data
+              if (restored == true && mounted) {
+                final freshVault = await _authService.getVault(widget.token);
+                final blob = freshVault['blob'];
+                if (blob != null) {
+                  final decrypted = await _authService.decryptVault(
+                    Map<String, dynamic>.from(blob),
+                    widget.password,
+                  );
+                  setState(() {
+                    _vaultItems = Map<String, Map<String, String>>.from(
+                      decrypted.map((k, v) => MapEntry(
+                            k,
+                            Map<String, String>.from(v),
+                          )),
+                    );
+                  });
+                }
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'Security Documentation',
