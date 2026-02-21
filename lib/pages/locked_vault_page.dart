@@ -73,40 +73,13 @@ class _LockedVaultPageState extends State<LockedVaultPage> {
         }
       }
 
-      // SECURITY ENHANCEMENT: Check if MFA is enabled for this account
-      debugPrint(
-          '[LockedVaultPage] Checking if MFA is enabled for user: ${widget.username}');
-      final mfaEnabled = await _authService.checkMfaStatus(widget.username);
-      debugPrint('[LockedVaultPage] MFA enabled for user: $mfaEnabled');
-
-      if (!mounted) return;
-
-      if (mfaEnabled) {
-        // MFA is enabled - require MFA verification before unlocking
-        debugPrint('[LockedVaultPage] MFA is enabled, requiring verification');
-        setState(() {
-          _requiresMfa = true;
-          _enteredPassword = enteredPassword;
-          _loading = false;
-          _passwordController.clear();
-        });
-        return;
-      } else {
-        // No MFA required - proceed with unlock
-        debugPrint('[LockedVaultPage] MFA not enabled, unlocking vault');
-        await _logService
-            .logAction('Vault unlocked after being locked due to inactivity');
+      await _logService
+          .logAction('Vault unlocked after being locked due to inactivity');
 
         if (!mounted) return;
 
-        // Notify parent to update vault with the entered password
-        widget.onUnlock(enteredPassword);
-        if (mounted) {
-          setState(() {
-            _loading = false;
-          });
-        }
-      }
+      // Notify parent to update vault with the entered password
+      widget.onUnlock(enteredPassword);
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
