@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'services/log_service.dart';
-import 'services/inactivity_service.dart';
+import 'widgets/app_hero_title.dart';
 import 'widgets/backup_dialog.dart';
 import 'docs_page.dart';
 // UI ENHANCEMENT: New settings page for accessibility controls
@@ -1535,67 +1535,50 @@ class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
     final sortedItems = _getSortedMap(_vaultItems);
     final filteredItems = _getFilteredItems(sortedItems);
 
-    // SECURITY ENHANCEMENT: Wrap UI in Listener to detect user activity (pointer events)
-    return Listener(
-      onPointerDown: (_) {
-        debugPrint('[VaultPage] Pointer down detected');
-        _inactivityService.resetInactivityTimer();
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: true,
-          title: const Text(
-            'Your Vault',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.6,
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        title: const Text(
+          'Your Vault',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
           ),
-          actions: [
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.only(right: 8),
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        actions: [
+          // UI ENHANCEMENT: Log of Action button
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Log of Action',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LogPage()),
+              );
+            },
+          ),
+          // UI ENHANCEMENT: Settings button for accessibility controls
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.backup),
+            tooltip: 'Encrypted Backups',
+            onPressed: () async {
+              final restored = await showDialog<bool>(
+                context: context,
+                builder: (_) => BackupManagerDialog(
+                  token: widget.token,
+                  authService: _authService,
                 ),
-              ),
-            // UI ENHANCEMENT: Log of Action button
-            IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: 'Log of Action',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => LogPage(token: widget.token),
-                  ),
-                );
-              },
-            ),
-            // UI ENHANCEMENT: Settings button for accessibility controls
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              tooltip: 'Settings',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SettingsPage()),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.backup),
-              tooltip: 'Encrypted Backups',
-              onPressed: () async {
-                final restored = await showDialog<bool>(
-                  context: context,
-                  builder: (_) => BackupManagerDialog(
-                    token: widget.token,
-                    authService: _authService,
-                  ),
-                );
+              );
 
                 if (restored == true) {
                   _loadVault();
