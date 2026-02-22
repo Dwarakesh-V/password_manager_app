@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'services/log_service.dart';
 import 'services/inactivity_service.dart';
-import 'widgets/app_hero_title.dart';
 import 'widgets/backup_dialog.dart';
 import 'docs_page.dart';
 // UI ENHANCEMENT: New settings page for accessibility controls
@@ -963,8 +962,6 @@ class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
         "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
   }
 
-  bool _loading = false;
-
   // -------- SEARCH & FILTER FUNCTION --------
   Map<String, Map<String, String>> _getFilteredItems(
       Map<String, Map<String, String>> items) {
@@ -1154,16 +1151,12 @@ class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
   }
 
   Future<void> _saveVault() async {
-    setState(() => _loading = true);
-
     final encrypted =
         await _authService.encryptVault(_vaultItems, _unlockedPassword);
     await _authService.updateVault(widget.token, encrypted);
 
     // SECURITY ENHANCEMENT: Reset inactivity timer on vault save activity
     _inactivityService.resetInactivityTimer();
-
-    setState(() => _loading = false);
   }
 
   bool _isStrongPassword(String pass) {
@@ -1560,7 +1553,8 @@ class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const LogPage()),
+                  MaterialPageRoute(
+                      builder: (_) => LogPage(token: widget.token)),
                 );
               },
             ),
