@@ -4,14 +4,15 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'password_manager_app/**'
-      - '.github/workflows/flutter_ci_cd.yml'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   pull_request:
     branches:
       - main
-    paths:
-      - 'password_manager_app/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 
 jobs:
   build_and_test:
@@ -50,5 +51,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: password_manager_app/build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 7
