@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
@@ -22,12 +21,13 @@ class _Category {
 
 final _categories = [
   _Category('All', {}),
-  _Category('Login / Logout',   {'LOGIN', 'LOGOUT', 'REGISTER'}),
-  _Category('Failed Login',     {'LOGIN_FAILED', 'MFA_VERIFY_FAILED'}),
-  _Category('Vault',            {'VAULT_ACCESS', 'VAULT_UPDATE'}),
-  _Category('Backup',           {'BACKUP_CREATE', 'BACKUP_RESTORE', 'BACKUP_DELETE', 'BACKUP_LIST'}),
-  _Category('MFA',              {'MFA_SETUP_INIT', 'MFA_ENABLED', 'MFA_DISABLED'}),
-  _Category('Security Alerts',  {'SECURITY_BLOCK', 'SECURITY_SUSPICIOUS'}),
+  _Category('Login / Logout', {'LOGIN', 'LOGOUT', 'REGISTER'}),
+  _Category('Failed Login', {'LOGIN_FAILED', 'MFA_VERIFY_FAILED'}),
+  _Category('Vault', {'VAULT_ACCESS', 'VAULT_UPDATE'}),
+  _Category('Backup',
+      {'BACKUP_CREATE', 'BACKUP_RESTORE', 'BACKUP_DELETE', 'BACKUP_LIST'}),
+  _Category('MFA', {'MFA_SETUP_INIT', 'MFA_ENABLED', 'MFA_DISABLED'}),
+  _Category('Security Alerts', {'SECURITY_BLOCK', 'SECURITY_SUSPICIOUS'}),
 ];
 
 class _LogPageState extends State<LogPage> {
@@ -38,8 +38,8 @@ class _LogPageState extends State<LogPage> {
   String? _error;
 
   // ── Filter state ─────────────────────────────────────────────────────────────
-  int _categoryIndex = 0;   // index into _categories; 0 = "All"
-  DateTime? _selectedDate;  // null = no date filter
+  int _categoryIndex = 0; // index into _categories; 0 = "All"
+  DateTime? _selectedDate; // null = no date filter
   bool _sortNewestFirst = true;
 
   @override
@@ -49,12 +49,23 @@ class _LogPageState extends State<LogPage> {
   }
 
   Future<void> _loadLogs() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final logs = await _authService.getLogs(widget.token);
-      if (mounted) setState(() { _logs = logs; _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _logs = logs;
+          _isLoading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _error = 'Failed to load logs. Please try again.'; _isLoading = false; });
+      if (mounted)
+        setState(() {
+          _error = 'Failed to load logs. Please try again.';
+          _isLoading = false;
+        });
     }
   }
 
@@ -69,7 +80,7 @@ class _LogPageState extends State<LogPage> {
 
       // Date filter
       if (_selectedDate != null) {
-        final ts = DateTime.tryParse(log['timestamp'] ?? '');
+        final ts = _tryParseServerTimestamp(log['timestamp'] ?? '');
         if (ts == null) return false;
         if (ts.year != _selectedDate!.year ||
             ts.month != _selectedDate!.month ||
@@ -81,8 +92,8 @@ class _LogPageState extends State<LogPage> {
 
     // Sort
     result.sort((a, b) {
-      final ta = DateTime.tryParse(a['timestamp'] ?? '') ?? DateTime(0);
-      final tb = DateTime.tryParse(b['timestamp'] ?? '') ?? DateTime(0);
+      final ta = _tryParseServerTimestamp(a['timestamp'] ?? '') ?? DateTime(0);
+      final tb = _tryParseServerTimestamp(b['timestamp'] ?? '') ?? DateTime(0);
       return _sortNewestFirst ? tb.compareTo(ta) : ta.compareTo(tb);
     });
 
@@ -94,58 +105,95 @@ class _LogPageState extends State<LogPage> {
     final action = log['action'] ?? '';
     final details = log['details'] ?? '';
     switch (action) {
-      case 'REGISTER':           return 'Account registered';
-      case 'LOGIN':              return 'Logged in';
-      case 'LOGOUT':             return 'Logged out';
-      case 'LOGIN_FAILED':       return details.isNotEmpty ? details : 'Login failed';
-      case 'VAULT_ACCESS':       return 'Vault accessed';
-      case 'VAULT_UPDATE':       return 'Vault updated';
-      case 'BACKUP_CREATE':      return 'Backup created';
-      case 'BACKUP_RESTORE':     return details.isNotEmpty ? 'Backup restored: ${details.replaceFirst('Restored backup: ', '')}' : 'Backup restored';
-      case 'BACKUP_DELETE':      return details.isNotEmpty ? 'Backup deleted: ${details.replaceFirst('Deleted backup: ', '')}' : 'Backup deleted';
-      case 'BACKUP_LIST':        return 'Backups listed';
-      case 'MFA_SETUP_INIT':     return 'MFA setup initiated';
-      case 'MFA_ENABLED':        return 'MFA enabled';
-      case 'MFA_DISABLED':       return 'MFA disabled';
-      case 'MFA_VERIFY_FAILED':  return 'MFA verification failed';
-      case 'SECURITY_BLOCK':     return details.isNotEmpty ? details : 'IP blocked';
-      case 'SECURITY_SUSPICIOUS':return details.isNotEmpty ? details : 'Suspicious activity';
-      default:                   return details.isNotEmpty ? details : action;
+      case 'REGISTER':
+        return 'Account registered';
+      case 'LOGIN':
+        return 'Logged in';
+      case 'LOGOUT':
+        return 'Logged out';
+      case 'LOGIN_FAILED':
+        return details.isNotEmpty ? details : 'Login failed';
+      case 'VAULT_ACCESS':
+        return 'Vault accessed';
+      case 'VAULT_UPDATE':
+        return 'Vault updated';
+      case 'BACKUP_CREATE':
+        return 'Backup created';
+      case 'BACKUP_RESTORE':
+        return details.isNotEmpty
+            ? 'Backup restored: ${details.replaceFirst('Restored backup: ', '')}'
+            : 'Backup restored';
+      case 'BACKUP_DELETE':
+        return details.isNotEmpty
+            ? 'Backup deleted: ${details.replaceFirst('Deleted backup: ', '')}'
+            : 'Backup deleted';
+      case 'BACKUP_LIST':
+        return 'Backups listed';
+      case 'MFA_SETUP_INIT':
+        return 'MFA setup initiated';
+      case 'MFA_ENABLED':
+        return 'MFA enabled';
+      case 'MFA_DISABLED':
+        return 'MFA disabled';
+      case 'MFA_VERIFY_FAILED':
+        return 'MFA verification failed';
+      case 'SECURITY_BLOCK':
+        return details.isNotEmpty ? details : 'IP blocked';
+      case 'SECURITY_SUSPICIOUS':
+        return details.isNotEmpty ? details : 'Suspicious activity';
+      default:
+        return details.isNotEmpty ? details : action;
     }
   }
 
   // ── Helper: icon for action ───────────────────────────────────────────────────
   IconData _iconFor(String action) {
     switch (action) {
-      case 'REGISTER':            return Icons.person_add;
-      case 'LOGIN':               return Icons.login;
-      case 'LOGOUT':              return Icons.logout;
-      case 'LOGIN_FAILED':        return Icons.no_accounts;
-      case 'VAULT_ACCESS':        return Icons.lock_open;
-      case 'VAULT_UPDATE':        return Icons.edit;
-      case 'BACKUP_CREATE':       return Icons.backup;
-      case 'BACKUP_RESTORE':      return Icons.restore;
-      case 'BACKUP_DELETE':       return Icons.delete_outline;
-      case 'BACKUP_LIST':         return Icons.list_alt;
+      case 'REGISTER':
+        return Icons.person_add;
+      case 'LOGIN':
+        return Icons.login;
+      case 'LOGOUT':
+        return Icons.logout;
+      case 'LOGIN_FAILED':
+        return Icons.no_accounts;
+      case 'VAULT_ACCESS':
+        return Icons.lock_open;
+      case 'VAULT_UPDATE':
+        return Icons.edit;
+      case 'BACKUP_CREATE':
+        return Icons.backup;
+      case 'BACKUP_RESTORE':
+        return Icons.restore;
+      case 'BACKUP_DELETE':
+        return Icons.delete_outline;
+      case 'BACKUP_LIST':
+        return Icons.list_alt;
       case 'MFA_SETUP_INIT':
       case 'MFA_ENABLED':
-      case 'MFA_DISABLED':        return Icons.security;
-      case 'MFA_VERIFY_FAILED':   return Icons.mobile_off;
+      case 'MFA_DISABLED':
+        return Icons.security;
+      case 'MFA_VERIFY_FAILED':
+        return Icons.mobile_off;
       case 'SECURITY_BLOCK':
-      case 'SECURITY_SUSPICIOUS': return Icons.warning_amber_rounded;
-      default:                    return Icons.history;
+      case 'SECURITY_SUSPICIOUS':
+        return Icons.warning_amber_rounded;
+      default:
+        return Icons.history;
     }
   }
 
   // ── Helper: icon color for action ─────────────────────────────────────────────
   Color _colorFor(String action, ColorScheme cs) {
-    if (action.contains('FAILED') || action.contains('BLOCK') || action.contains('SUSPICIOUS')) {
+    if (action.contains('FAILED') ||
+        action.contains('BLOCK') ||
+        action.contains('SUSPICIOUS')) {
       return Colors.red.shade400;
     }
     if (action.startsWith('BACKUP')) return Colors.blue.shade400;
-    if (action.startsWith('MFA'))    return Colors.purple.shade300;
-    if (action == 'LOGIN')           return Colors.green.shade400;
-    if (action == 'LOGOUT')          return Colors.orange.shade400;
+    if (action.startsWith('MFA')) return Colors.purple.shade300;
+    if (action == 'LOGIN') return Colors.green.shade400;
+    if (action == 'LOGOUT') return Colors.orange.shade400;
     return cs.primary;
   }
 
@@ -160,15 +208,18 @@ class _LogPageState extends State<LogPage> {
     int logins = 0, vault = 0, alerts = 0;
     for (final log in all) {
       final a = log['action'] ?? '';
-      if (a == 'LOGIN' || a == 'LOGOUT' || a == 'REGISTER') logins++;
-      else if (a.startsWith('VAULT')) vault++;
+      if (a == 'LOGIN' || a == 'LOGOUT' || a == 'REGISTER')
+        logins++;
+      else if (a.startsWith('VAULT'))
+        vault++;
       else if (_isSecurityAction(a)) alerts++;
     }
     return {'Logins': logins, 'Vault': vault, 'Alerts': alerts};
   }
 
   // ── Compact stat card widget ──────────────────────────────────────────────
-  Widget _statCard(ColorScheme cs, IconData icon, String label, int value, bool isAlert) {
+  Widget _statCard(
+      ColorScheme cs, IconData icon, String label, int value, bool isAlert) {
     final active = isAlert && value > 0;
     return Expanded(
       child: Container(
@@ -224,6 +275,30 @@ class _LogPageState extends State<LogPage> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
+  DateTime? _tryParseServerTimestamp(String raw) {
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) return null;
+
+    final hasTimezone =
+        raw.endsWith('Z') || RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(raw);
+
+    // Backward compatibility: older server values were timezone-naive UTC.
+    if (!hasTimezone && !parsed.isUtc) {
+      return DateTime.utc(
+        parsed.year,
+        parsed.month,
+        parsed.day,
+        parsed.hour,
+        parsed.minute,
+        parsed.second,
+        parsed.millisecond,
+        parsed.microsecond,
+      ).toLocal();
+    }
+
+    return parsed.toLocal();
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -236,9 +311,13 @@ class _LogPageState extends State<LogPage> {
         title: const Text('Activity Logs'),
         actions: [
           IconButton(
-            icon: Icon(_sortNewestFirst ? Icons.arrow_downward : Icons.arrow_upward),
-            tooltip: _sortNewestFirst ? 'Switch to oldest first' : 'Switch to newest first',
-            onPressed: () => setState(() => _sortNewestFirst = !_sortNewestFirst),
+            icon: Icon(
+                _sortNewestFirst ? Icons.arrow_downward : Icons.arrow_upward),
+            tooltip: _sortNewestFirst
+                ? 'Switch to oldest first'
+                : 'Switch to newest first',
+            onPressed: () =>
+                setState(() => _sortNewestFirst = !_sortNewestFirst),
           ),
           IconButton(
             icon: Icon(
@@ -267,8 +346,10 @@ class _LogPageState extends State<LogPage> {
               child: Row(
                 children: [
                   _statCard(cs, Icons.login, 'Logins', stats['Logins']!, false),
-                  _statCard(cs, Icons.lock_open, 'Vault', stats['Vault']!, false),
-                  _statCard(cs, Icons.warning_amber_rounded, 'Alerts', stats['Alerts']!, true),
+                  _statCard(
+                      cs, Icons.lock_open, 'Vault', stats['Vault']!, false),
+                  _statCard(cs, Icons.warning_amber_rounded, 'Alerts',
+                      stats['Alerts']!, true),
                 ],
               ),
             ),
@@ -282,7 +363,8 @@ class _LogPageState extends State<LogPage> {
               height: 48,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 itemCount: _categories.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, i) {
@@ -296,12 +378,14 @@ class _LogPageState extends State<LogPage> {
                     backgroundColor: Colors.transparent,
                     shape: StadiumBorder(
                       side: BorderSide(
-                        color: selected ? cs.primary : cs.outline.withOpacity(0.5),
+                        color:
+                            selected ? cs.primary : cs.outline.withOpacity(0.5),
                       ),
                     ),
                     labelStyle: TextStyle(
                       color: selected ? Colors.white : cs.onSurface,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.normal,
                       fontSize: 13,
                     ),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -335,7 +419,8 @@ class _LogPageState extends State<LogPage> {
                         minimumSize: const Size(0, 0),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      child: const Text('Clear filters', style: TextStyle(fontSize: 12)),
+                      child: const Text('Clear filters',
+                          style: TextStyle(fontSize: 12)),
                     ),
                   ],
                 ],
@@ -347,7 +432,8 @@ class _LogPageState extends State<LogPage> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
               child: KeyedSubtree(
-                key: ValueKey('$_categoryIndex-${_selectedDate?.toIso8601String()}-$_sortNewestFirst'),
+                key: ValueKey(
+                    '$_categoryIndex-${_selectedDate?.toIso8601String()}-$_sortNewestFirst'),
                 child: _buildBody(filtered, cs),
               ),
             ),
@@ -380,10 +466,13 @@ class _LogPageState extends State<LogPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: cs.onSurfaceVariant.withOpacity(0.4)),
+            Icon(Icons.search_off,
+                size: 64, color: cs.onSurfaceVariant.withOpacity(0.4)),
             const SizedBox(height: 16),
             Text(
-              _logs.isEmpty ? 'No activity yet' : 'No entries match the current filters',
+              _logs.isEmpty
+                  ? 'No activity yet'
+                  : 'No entries match the current filters',
               style: TextStyle(fontSize: 16, color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
@@ -395,7 +484,8 @@ class _LogPageState extends State<LogPage> {
     // ── Group logs by date for section headers ────────────────────────────
     final grouped = <String, List<Map<String, dynamic>>>{};
     for (final log in filtered) {
-      final ts = DateTime.tryParse(log['timestamp'] ?? '') ?? DateTime.now();
+      final ts =
+          _tryParseServerTimestamp(log['timestamp'] ?? '') ?? DateTime.now();
       final dayKey = DateFormat('yyyy-MM-dd').format(ts);
       grouped.putIfAbsent(dayKey, () => []).add(log);
     }
@@ -421,7 +511,9 @@ class _LogPageState extends State<LogPage> {
                 ? 'TODAY'
                 : isYesterday
                     ? 'YESTERDAY'
-                    : DateFormat('EEEE • dd MMM yyyy').format(date).toUpperCase();
+                    : DateFormat('EEEE • dd MMM yyyy')
+                        .format(date)
+                        .toUpperCase();
 
             return Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
@@ -447,7 +539,8 @@ class _LogPageState extends State<LogPage> {
           if (index < offset + items.length) {
             final log = items[index - offset];
             final action = log['action'] ?? '';
-            final ts = DateTime.tryParse(log['timestamp'] ?? '') ?? DateTime.now();
+            final ts = _tryParseServerTimestamp(log['timestamp'] ?? '') ??
+                DateTime.now();
             final color = _colorFor(action, cs);
             final isAlert = _isSecurityAction(action);
 
@@ -459,7 +552,8 @@ class _LogPageState extends State<LogPage> {
                       : cs.primary.withOpacity(0.05),
                   onTap: () {},
                   child: Container(
-                    color: isAlert ? Colors.red.shade900.withOpacity(0.12) : null,
+                    color:
+                        isAlert ? Colors.red.shade900.withOpacity(0.12) : null,
                     child: ListTile(
                       leading: CircleAvatar(
                         backgroundColor: color.withOpacity(0.15),
@@ -477,8 +571,11 @@ class _LogPageState extends State<LogPage> {
                             child: Text(
                               _formatAction(log),
                               style: TextStyle(
-                                color: isAlert ? Colors.redAccent.shade100 : null,
-                                fontWeight: isAlert ? FontWeight.w600 : FontWeight.normal,
+                                color:
+                                    isAlert ? Colors.redAccent.shade100 : null,
+                                fontWeight: isAlert
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
                               ),
                             ),
                           ),
@@ -497,7 +594,8 @@ class _LogPageState extends State<LogPage> {
                     ),
                   ),
                 ),
-                const Divider(height: 1, thickness: 0.4, indent: 72, endIndent: 16),
+                const Divider(
+                    height: 1, thickness: 0.4, indent: 72, endIndent: 16),
               ],
             );
           }

@@ -198,7 +198,7 @@ class _BackupManagerDialogState extends State<BackupManagerDialog> {
 
   String _formatDate(String isoString) {
     try {
-      final dt = DateTime.parse(isoString).toLocal();
+      final dt = _parseServerTimestamp(isoString);
       final months = [
         'Jan',
         'Feb',
@@ -222,6 +222,28 @@ class _BackupManagerDialogState extends State<BackupManagerDialog> {
     } catch (e) {
       return isoString;
     }
+  }
+
+  DateTime _parseServerTimestamp(String raw) {
+    final parsed = DateTime.parse(raw);
+    final hasTimezone =
+        raw.endsWith('Z') || RegExp(r'[+-]\d{2}:?\d{2}$').hasMatch(raw);
+
+    // Backward compatibility: older server values were timezone-naive UTC.
+    if (!hasTimezone && !parsed.isUtc) {
+      return DateTime.utc(
+        parsed.year,
+        parsed.month,
+        parsed.day,
+        parsed.hour,
+        parsed.minute,
+        parsed.second,
+        parsed.millisecond,
+        parsed.microsecond,
+      ).toLocal();
+    }
+
+    return parsed.toLocal();
   }
 
   @override
