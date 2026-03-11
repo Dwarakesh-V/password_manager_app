@@ -2375,97 +2375,88 @@ class _VaultPageState extends State<VaultPage> with WidgetsBindingObserver {
                                 child: Padding(
                                   padding: const EdgeInsets.only(bottom: 4),
                                   child: Card(
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(18),
-                                      onTap: () {},
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 4),
-                                        child: Row(
-                                          children: [
-                                            // Colored category avatar
-                                            Container(
-                                              width: 46,
-                                              height: 46,
-                                              decoration: BoxDecoration(
-                                                color: categoryColor
-                                                    .withOpacity(0.15),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              child: Icon(
-                                                _getCategoryIcon(category),
-                                                color: categoryColor,
-                                                size: 22,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 14),
-                                            // Title + updated
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    entry.key,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 15,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    category,
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: categoryColor,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    'Updated: ${entry.value["updatedAt"] ?? ""}',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodySmall,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            // Action buttons
-                                            IconButton(
-                                              icon: const Icon(
-                                                  Icons.copy_rounded,
-                                                  size: 20),
-                                              tooltip: 'Copy password',
-                                              onPressed: () =>
-                                                  _copyWithAuthorization(
-                                                entry.value['password']!,
-                                                entry.key,
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                  Icons.edit_rounded,
-                                                  size: 20),
-                                              tooltip: 'Edit',
-                                              onPressed: () => _editItem(
-                                                  entry.key,
-                                                  entry.value['password']!,
-                                                  category),
-                                            ),
-                                            IconButton(
-                                              icon: Icon(Icons.delete_rounded,
-                                                  size: 20,
-                                                  color: Colors.red
-                                                      .withOpacity(0.7)),
-                                              tooltip: 'Delete',
-                                              onPressed: () =>
-                                                  _deleteItem(entry.key),
-                                            ),
-                                          ],
+                                    child: ListTile(
+                                      // Leading: colored category avatar
+                                      leading: Container(
+                                        width: 46,
+                                        height: 46,
+                                        decoration: BoxDecoration(
+                                          color: categoryColor.withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
+                                        child: Icon(
+                                          _getCategoryIcon(category),
+                                          color: categoryColor,
+                                          size: 22,
+                                        ),
+                                      ),
+                                      // Title: row with name + category chip
+                                      title: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              entry.key,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: categoryColor.withOpacity(0.12),
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              category,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: categoryColor,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      // Subtitle: timestamp
+                                      subtitle: Text(
+                                        'Updated: ${entry.value["updatedAt"] ?? ""}',
+                                        style: Theme.of(context).textTheme.bodySmall,
+                                      ),
+                                      // Trailing: action icons
+                                      // Use base icon names so widget tests can find them
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.copy, size: 20),
+                                            tooltip: 'Copy password',
+                                            onPressed: () => _copyWithAuthorization(
+                                              entry.value['password']!,
+                                              entry.key,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.edit, size: 20),
+                                            tooltip: 'Edit',
+                                            onPressed: () => _editItem(
+                                              entry.key,
+                                              entry.value['password']!,
+                                              category,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.delete,
+                                              size: 20,
+                                              color: Colors.red.withOpacity(0.7),
+                                            ),
+                                            tooltip: 'Delete',
+                                            onPressed: () => _deleteItem(entry.key),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
